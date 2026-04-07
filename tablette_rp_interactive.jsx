@@ -1,111 +1,95 @@
-import { useState, useEffect } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { motion } from "framer-motion";
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tablette RP</title>
+  <style>
+    body { margin:0; font-family: Arial, sans-serif; background:#1a1a1a; color:#000; }
+    .center { display:flex; justify-content:center; align-items:center; height:100vh; }
+    .card { background:#fff; padding:20px; border-radius:12px; box-shadow:0 5px 20px rgba(0,0,0,0.3); }
+    button { padding:10px; margin:5px; border:none; border-radius:8px; cursor:pointer; }
+    .grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .hidden { display:none; }
+    .secret { border:2px solid red; margin-top:10px; }
+    .transactions { max-height:150px; overflow-y:auto; font-size:14px; }
+  </style>
+</head>
+<body>
 
-export default function TabletteRP() {
-  const [logged, setLogged] = useState(false);
-  const [code, setCode] = useState("");
-  const [balance, setBalance] = useState(() => {
-    return parseInt(localStorage.getItem("balance") || "12500");
-  });
-  const [transactions, setTransactions] = useState(() => {
-    return JSON.parse(localStorage.getItem("transactions") || "[]");
-  });
-  const [secretOpen, setSecretOpen] = useState(false);
-  const [clickCount, setClickCount] = useState(0);
+<div id="login" class="center">
+  <div class="card">
+    <h2>Connexion</h2>
+    <input type="password" id="code" placeholder="Code" />
+    <br><br>
+    <button onclick="login()">Se connecter</button>
+  </div>
+</div>
 
-  useEffect(() => {
-    localStorage.setItem("balance", balance);
-    localStorage.setItem("transactions", JSON.stringify(transactions));
-  }, [balance, transactions]);
+<div id="app" class="hidden" style="padding:20px;">
+  <div class="card">
+    <h2 onclick="secretClick()" style="cursor:pointer">TABLETTE BANCAIRE</h2>
+    <p id="balance"></p>
+  </div>
 
-  const login = () => {
-    if (code === "1234") setLogged(true);
-  };
+  <div class="grid">
+    <button onclick="addTransaction(500)">+500</button>
+    <button onclick="addTransaction(-200)">-200</button>
+  </div>
 
-  const addTransaction = (amount) => {
-    setBalance(balance + amount);
-    setTransactions([
-      { amount, date: new Date().toLocaleString() },
-      ...transactions,
-    ]);
-  };
+  <div class="card">
+    <h3>Transactions</h3>
+    <div id="transactions" class="transactions"></div>
+  </div>
 
-  const handleSecretClick = () => {
-    const newCount = clickCount + 1;
-    setClickCount(newCount);
-    if (newCount >= 5) {
-      setSecretOpen(true);
-      setClickCount(0);
-    }
-  };
+  <div id="secret" class="card secret hidden">
+    <h3 style="color:red">ACCÈS CACHÉ</h3>
+    <p>Données sensibles disponibles</p>
+    <button onclick="addTransaction(10000)">Blanchir +10 000$</button>
+  </div>
+</div>
 
-  if (!logged) {
-    return (
-      <div className="h-screen flex items-center justify-center bg-gray-900">
-        <Card className="p-6">
-          <CardContent>
-            <h1 className="text-xl mb-4">Connexion</h1>
-            <input
-              type="password"
-              placeholder="Code"
-              className="border p-2 w-full mb-4"
-              onChange={(e) => setCode(e.target.value)}
-            />
-            <Button onClick={login}>Se connecter</Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
+<script>
+let balance = parseInt(localStorage.getItem('balance') || '12500');
+let transactions = JSON.parse(localStorage.getItem('transactions') || '[]');
+let clickCount = 0;
+
+function login() {
+  const code = document.getElementById('code').value;
+  if (code === '1234') {
+    document.getElementById('login').style.display = 'none';
+    document.getElementById('app').classList.remove('hidden');
+    updateUI();
   }
-
-  return (
-    <div className="h-screen bg-gray-100 p-4">
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-        <Card className="mb-4">
-          <CardContent>
-            <h2
-              className="text-lg font-bold cursor-pointer"
-              onClick={handleSecretClick}
-            >
-              TABLETTE BANCAIRE
-            </h2>
-            <p>Solde : {balance} $</p>
-          </CardContent>
-        </Card>
-
-        <div className="grid grid-cols-2 gap-2 mb-4">
-          <Button onClick={() => addTransaction(500)}>+500</Button>
-          <Button onClick={() => addTransaction(-200)}>-200</Button>
-        </div>
-
-        <Card>
-          <CardContent>
-            <h3 className="mb-2">Transactions</h3>
-            <div className="max-h-40 overflow-y-auto">
-              {transactions.map((t, i) => (
-                <div key={i} className="text-sm border-b py-1">
-                  {t.amount > 0 ? "+" : ""}
-                  {t.amount} $ - {t.date}
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {secretOpen && (
-          <Card className="mt-4 border-red-500 border-2">
-            <CardContent>
-              <h3 className="text-red-500">ACCÈS CACHÉ</h3>
-              <p>Données sensibles disponibles</p>
-              <Button onClick={() => addTransaction(10000)}>
-                Blanchir +10 000$
-              </Button>
-            </CardContent>
-          </Card>
-        )}
-      </motion.div>
-    </div>
-  );
 }
+
+function updateUI() {
+  document.getElementById('balance').innerText = 'Solde : ' + balance + ' $';
+  const list = document.getElementById('transactions');
+  list.innerHTML = '';
+  transactions.forEach(t => {
+    const div = document.createElement('div');
+    div.innerText = (t.amount > 0 ? '+' : '') + t.amount + ' $ - ' + t.date;
+    list.appendChild(div);
+  });
+}
+
+function addTransaction(amount) {
+  balance += amount;
+  transactions.unshift({ amount: amount, date: new Date().toLocaleString() });
+  localStorage.setItem('balance', balance);
+  localStorage.setItem('transactions', JSON.stringify(transactions));
+  updateUI();
+}
+
+function secretClick() {
+  clickCount++;
+  if (clickCount >= 5) {
+    document.getElementById('secret').classList.remove('hidden');
+    clickCount = 0;
+  }
+}
+</script>
+
+</body>
+</html>
